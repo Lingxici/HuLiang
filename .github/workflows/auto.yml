@@ -70,6 +70,7 @@ jobs:
           HUYA_COOKIE: ${{ secrets.HUYA_COOKIE }}
           HUYA_ROOMS: ${{ steps.get-rooms.outputs.rooms }}
           SEND_KEY: ${{ secrets.SEND_KEY }}  # <--- 补上这一行，脚本才能读到推送 Key
+          UID: ${{ secrets.SEND_UID }}
           HEADLESS: "true"
         run: |
           xvfb-run -a python main.py

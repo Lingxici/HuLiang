@@ -29,6 +29,7 @@ class HuYaAuto:
         self.cookie = os.getenv('HUYA_COOKIE', '').strip()
         self.rooms = self._parse_rooms(os.getenv('HUYA_ROOMS', ''))
         self.send_key = os.getenv('SEND_KEY', '').strip()
+        self.uid = os.getenv('SEND_UID', '').strip()
 
         if not self.cookie:
             print("[ERROR] 未设置 HUYA_COOKIE"); sys.exit(1)
@@ -67,26 +68,36 @@ class HuYaAuto:
             print(f"[WARN] 导航异常: {e}")
         time.sleep(sleep)
 
-    def send_notification(self):
-        """新增：Server酱推送方法"""
+        def send_notification(self):
+        """Server酱³推送"""
         if not self.enable_push or not self.send_key:
             return
 
+        if not self.uid or not self.send_key:
+            print("[PUSH] 未配置 UID / SENDKEY，跳过推送")
+            return
+
         print("[PUSH] 正在发送推送通知...")
+        url = f"https://{self.uid}.push.ft07.com/send/{self.send_key}.send"
+        data = {
+            "title": "虎牙自动任务报告",
+            "desp": "\n\n".join(self.msg_logs),
+        }
+
         try:
-            content = "\n\n".join(self.msg_logs)
-            url = f"https://sctapi.ftqq.com/{self.send_key}.send"
-            data = {
-                "title": "虎牙自动任务报告",
-                "desp": content
-            }
-            res = requests.post(url, data=data, timeout=10)
-            if res.status_code == 200:
-                print("[SUCCESS] 推送发送成功")
-            else:
+            res = requests.get(url, params=data, timeout=10)
+            if res.status_code != 200:
                 print(f"[FAILED] 推送失败，状态码: {res.status_code}")
+                return
+            result = res.json()
         except Exception as e:
-            print(f"[ERROR] 推送异常: {e}")
+            print(f"[ERROR] 推送异常: {type(e).__name__}: {str(e).replace(self.send_key, '***')}")
+            return
+
+        if str(result.get("code")) == "0":
+            print("[SUCCESS] 推送发送成功")
+        else:
+            print(f"[FAILED] 推送失败，code={result.get('code')}, message={result.get('message')}")
 
     def login(self):
         print("[LOGIN] 正在登录...")

@@ -68,7 +68,7 @@ class HuYaAuto:
             print(f"[WARN] 导航异常: {e}")
         time.sleep(sleep)
 
-        def send_notification(self):
+    def send_notification(self):
         """Server酱³推送"""
         if not self.enable_push or not self.send_key:
             return
